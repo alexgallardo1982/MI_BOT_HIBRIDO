@@ -1,0 +1,11 @@
+# Archivos de configuración y secretos
+.env
+google-credentials.json
+token.pickle
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+.venv/
+env/
+venv/
