@@ -1,0 +1,41 @@
+{
+  "saludo": {
+    "hola": {
+    "patrones": [" hola ", " hey ", "buenos días", "buenas tardes", " hi "],
+    "respuesta": "¡Hola! 👋 ¿En qué puedo ayudarte?"
+      }
+    },
+    "gracias": {
+      "patrones": ["gracias", "thank you", "thanks"],
+      "respuesta": "¡De nada! 😊 ¿Hay algo más?"
+    }
+  },
+  "informacion": {
+    "horario": {
+      "patrones": ["horario", "abierto", "cierre", "horas"],
+      "respuesta": "📅 Abierto:\nLunes-Viernes: 9am-6pm\nSábado: 10am-2pm\nDomingo: Cerrado"
+    },
+    "ubicacion": {
+      "patrones": ["dónde", "ubicación", "dirección", "localización"],
+      "respuesta": "📍 Nos encontramos en:\nAv. Principal 123, Iquique"
+    },
+    "telefono": {
+      "patrones": ["teléfono", "llamar", "whatsapp", "contacto"],
+      "respuesta": "📞 Llámanos: +56 9 1234 5678\n💬 WhatsApp: +56 9 1234 5678"
+    },
+    "email": {
+      "patrones": ["email", "correo", "mail"],
+      "respuesta": "📧 contacto@miempresa.com"
+    }
+  },
+  "productos": {
+    "laptop": {
+      "patrones": ["laptop", "notebook", "computadora"],
+      "respuesta": "💻 Tenemos laptops HP, Dell y Lenovo\n¿Cuál te interesa? 📲"
+    },
+    "precio": {
+      "patrones": ["precio", "costo", "cuanto cuesta"],
+      "respuesta": "💰 Los precios varían según el producto.\n¿Qué buscas específicamente?"
+    }
+  }
+}
