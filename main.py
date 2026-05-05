@@ -20,8 +20,13 @@ TELEGRAM_API = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}'
 groq_client  = Groq(api_key=GROQ_API_KEY)
 
 # Google Drive
-drive = None
-print("Google Drive desactivado en Railway")
+try:
+    from modules.google_drive import GoogleDrive
+    drive = GoogleDrive()
+    print("Google Drive conectado")
+except Exception as e:
+    print(f"Drive no conectado: {e}")
+    drive = None
 
 # Respuestas automaticas
 respuestas = {}
