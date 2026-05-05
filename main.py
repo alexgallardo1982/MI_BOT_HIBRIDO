@@ -20,35 +20,8 @@ TELEGRAM_API = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}'
 groq_client  = Groq(api_key=GROQ_API_KEY)
 
 # Google Drive
-# Google Drive
-try:
-    import json
-    import base64
-    from modules.google_drive import GoogleDrive
-    
-    # Crear google-credentials.json desde variable de entorno
-    google_creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
-    if google_creds_json:
-        with open('/tmp/google-credentials.json', 'w') as f:
-            f.write(google_creds_json)
-        # Actualizar módulo para usar nuevo path
-        import sys
-        sys.path.insert(0, '/tmp')
-    
-    # Crear token.pickle desde variable de entorno
-    google_token_b64 = os.getenv('GOOGLE_TOKEN_PICKLE_B64')
-    if google_token_b64:
-        token_data = base64.b64decode(google_token_b64)
-        token_path = os.path.expanduser('~/.ssh/token.pickle')
-        os.makedirs(os.path.dirname(token_path), exist_ok=True)
-        with open(token_path, 'wb') as f:
-            f.write(token_data)
-    
-    drive = GoogleDrive()
-    print("Google Drive conectado")
-except Exception as e:
-    print(f"Drive no conectado: {e}")
-    drive = None
+drive = None
+print("Google Drive desactivado en Railway")
 
 # Respuestas automaticas
 respuestas = {}
