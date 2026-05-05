@@ -12,8 +12,29 @@ class GoogleDrive:
     def __init__(self):
         self.service = None
         self.conectar()
-
     def conectar(self):
+creds       = None
+import base64
+
+# En Railway, usar archivos creados desde variables de entorno
+token_path  = os.path.expanduser('~/.ssh/token.pickle')
+creds_path  = os.path.expanduser('~/.ssh/google-credentials.json')
+
+# Si no existen, crear desde variables de entorno
+if not os.path.exists(creds_path):
+    google_creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    if google_creds_json:
+        os.makedirs(os.path.dirname(creds_path), exist_ok=True)
+        with open(creds_path, 'w') as f:
+            f.write(google_creds_json)
+
+if not os.path.exists(token_path):
+    google_token_b64 = os.getenv('GOOGLE_TOKEN_PICKLE_B64')
+    if google_token_b64:
+        os.makedirs(os.path.dirname(token_path), exist_ok=True)
+        token_data = base64.b64decode(google_token_b64)
+        with open(token_path, 'wb') as f:
+            f.write(token_data)
         creds       = None
         token_path  = f'{BASE}/token.pickle'
         creds_path  = f'{BASE}/google-credentials.json'
