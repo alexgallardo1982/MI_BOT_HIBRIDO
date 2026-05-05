@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-BASE   = os.path.expanduser('~/mi_bot_hibrido')
+BASE = os.path.expanduser('~/mi_bot_hibrido')
 
 class GoogleDrive:
     def __init__(self):
@@ -16,12 +16,9 @@ class GoogleDrive:
 
     def conectar(self):
         creds = None
-        
-        # En Railway, usar archivos creados desde variables de entorno
         token_path = os.path.expanduser('~/.ssh/token.pickle')
         creds_path = os.path.expanduser('~/.ssh/google-credentials.json')
         
-        # Si no existen, crear desde variables de entorno
         if not os.path.exists(creds_path):
             google_creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
             if google_creds_json:
