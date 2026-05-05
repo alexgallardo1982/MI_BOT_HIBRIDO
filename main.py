@@ -203,7 +203,9 @@ def health():
     return jsonify({'status': 'ok', 'drive': 'si' if drive else 'no'}), 200
 
 if __name__ == '__main__':
+    import os
     print("BOT INICIANDO...")
     cargar_respuestas()
-    print("http://localhost:3000")
-    app.run(debug=False, port=3000)
+    port = int(os.environ.get('PORT', 3000))
+    print(f"Servidor en puerto {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
