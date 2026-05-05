@@ -21,11 +21,16 @@ groq_client  = Groq(api_key=GROQ_API_KEY)
 
 # Google Drive
 try:
+    print(f"GOOGLE_CREDENTIALS_JSON presente: {bool(os.getenv('GOOGLE_CREDENTIALS_JSON'))}")
+    print(f"GOOGLE_TOKEN_PICKLE_B64 presente: {bool(os.getenv('GOOGLE_TOKEN_PICKLE_B64'))}")
+    
     from modules.google_drive import GoogleDrive
     drive = GoogleDrive()
-    print("Google Drive conectado")
+    print("✅ Google Drive conectado")
 except Exception as e:
-    print(f"Drive no conectado: {e}")
+    print(f"❌ Drive no conectado: {e}")
+    import traceback
+    traceback.print_exc()
     drive = None
 
 # Respuestas automaticas
