@@ -155,19 +155,27 @@ def enviar_a_telegram(chat_id, texto):
         print(f"Error enviando: {e}")
         return False
 # Webhook
+# Webhook
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
+        print(f"\n{'='*50}")
+        print("WEBHOOK RECIBIDO")
+        print(f"{'='*50}")
+        
         data = request.get_json()
+        print(f"Data recibida: {data}")
+        
         if not data or 'message' not in data:
+            print("Sin mensaje en data")
             return jsonify({'ok': True}), 200
 
         msg     = data['message']
         chat_id = msg['chat']['id']
         texto   = msg.get('text', '')
 
-        print(f"\n{'='*50}")
-        print(f"Mensaje: {texto}")
+        print(f"Chat ID: {chat_id}")
+        print(f"Texto: {texto}")
         print(f"{'='*50}")
 
         respuesta = None
@@ -189,13 +197,20 @@ def webhook():
             respuesta, _ = generar_respuesta_ia(texto)
             print("IA")
 
-        enviar_a_telegram(chat_id, respuesta)
-        print(f"Enviado: {respuesta[:50]}...")
+        print(f"Respuesta: {respuesta[:100] if respuesta else 'NONE'}")
+        
+        if respuesta:
+            enviar_a_telegram(chat_id, respuesta)
+            print(f"Enviado correctamente")
+        else:
+            print("SIN RESPUESTA")
 
         return jsonify({'ok': True}), 200
 
     except Exception as e:
-        print(f"ERROR: {e}")
+        print(f"ERROR EN WEBHOOK: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'ok': True}), 200
 
 @app.route('/health', methods=['GET'])
