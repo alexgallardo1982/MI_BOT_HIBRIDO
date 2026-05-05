@@ -125,6 +125,7 @@ def comando_drive(texto):
     return None
 
 # IA Groq
+# IA Groq
 def generar_respuesta_ia(texto):
     try:
         completion = groq_client.chat.completions.create(
@@ -153,7 +154,6 @@ def enviar_a_telegram(chat_id, texto):
     except Exception as e:
         print(f"Error enviando: {e}")
         return False
-
 # Webhook
 @app.route('/webhook', methods=['POST'])
 def webhook():
