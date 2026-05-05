@@ -143,17 +143,30 @@ def generar_respuesta_ia(texto):
         return "Disculpa, no puedo responder ahora.", 'ERROR'
 
 # Enviar a Telegram
+# Enviar a Telegram
 def enviar_a_telegram(chat_id, texto):
     try:
         if len(texto) > 4000:
             texto = texto[:4000] + "\n\n... (mensaje truncado)"
         url = f'{TELEGRAM_API}/sendMessage'
+        print(f"URL: {url}")
+        print(f"Chat ID: {chat_id}")
+        print(f"Texto: {texto}")
+        
         payload = {'chat_id': chat_id, 'text': texto, 'parse_mode': 'Markdown'}
+        print(f"Payload: {payload}")
+        
         r = requests.post(url, json=payload, timeout=15)
+        print(f"Status code: {r.status_code}")
+        print(f"Response: {r.text}")
+        
         return r.status_code == 200
     except Exception as e:
         print(f"Error enviando: {e}")
+        import traceback
+        traceback.print_exc()
         return False
+
 # Webhook
 # Webhook
 @app.route('/webhook', methods=['POST'])
