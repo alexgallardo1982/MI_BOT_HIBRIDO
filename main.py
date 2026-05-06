@@ -53,6 +53,45 @@ def buscar_respuesta(texto):
                 if patron.lower() in texto_limpio:
                     return item.get('respuesta', ''), 'AUTOMATICA'
     return None, None
+# Google Sheets
+try:
+    from modules.google_sheets import GoogleSheets
+    sheets = GoogleSheets()
+    print("✅ Google Sheets conectado")
+except Exception as e:
+    print(f"❌ Sheets no conectado: {e}")
+    sheets = None
+
+# Palabras clave para Sheets
+PALABRAS_SHEETS = [
+    "oc ", "resumen", "resumen oc", "resumen ordenes",
+    "ordenes", "listar oc", "listar ordenes"
+]
+
+def es_comando_sheets(texto):
+    t = texto.lower().strip()
+    return any(p in t for p in PALABRAS_SHEETS)
+
+def comando_sheets(texto):
+    if not sheets:
+        return "Google Sheets no está conectado"
+    
+    t = texto.lower().strip()
+    
+    # Resumen
+    if t in ['resumen', 'resumen oc', 'resumen ordenes', 'ordenes']:
+        return sheets.resumen()
+    
+    # Buscar OC
+    if t.startswith('oc '):
+        numero = t.replace('oc ', '').strip()
+        oc = sheets.buscar_oc(numero)
+        if oc:
+            return sheets.formatear_oc(oc)
+        else:
+            return f"❌ OC {numero} no encontrada"
+    
+    return None
 
 # Google Drive comandos
 PALABRAS_DRIVE = [
@@ -203,24 +242,28 @@ def webhook():
 
         respuesta = None
 
-        # 1. Google Drive
-        if es_comando_drive(texto):
-            respuesta = comando_drive(texto)
-            if respuesta:
-                print("GOOGLE DRIVE")
+	# 1. Google Sheets ← NUEVO (PRIORIDAD 1)
+	if es_comando_sheets(texto):
+    	respuesta = comando_sheets(texto)
+    	if respuesta:
+        print("GOOGLE SHEETS")
 
-        # 2. Automatica
-        if not respuesta:
-            respuesta, _ = buscar_respuesta(texto)
-            if respuesta:
-                print("AUTOMATICA")
+	# 2. Google Drive
+	if not respuesta and es_comando_drive(texto):
+    	respuesta = comando_drive(texto)
+    	if respuesta:
+        print("GOOGLE DRIVE")
 
-        # 3. IA
-        if not respuesta:
-            respuesta, _ = generar_respuesta_ia(texto)
-            print("IA")
+	# 3. Automatica
+	if not respuesta:
+    	respuesta, _ = buscar_respuesta(texto)
+    	if respuesta:
+        print("AUTOMATICA")
 
-        print(f"Respuesta: {respuesta[:100] if respuesta else 'NONE'}")
+	# 4. IA
+	if not respuesta:
+    	respuesta, _ = generar_respuesta_ia(texto)
+    	print("IA")
         
         if respuesta:
             enviar_a_telegram(chat_id, respuesta)
