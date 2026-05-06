@@ -23,7 +23,6 @@ groq_client  = Groq(api_key=GROQ_API_KEY)
 try:
     print(f"GOOGLE_CREDENTIALS_JSON presente: {bool(os.getenv('GOOGLE_CREDENTIALS_JSON'))}")
     print(f"GOOGLE_TOKEN_PICKLE_B64 presente: {bool(os.getenv('GOOGLE_TOKEN_PICKLE_B64'))}")
-    
     from modules.google_drive import GoogleDrive
     drive = GoogleDrive()
     print("✅ Google Drive conectado")
@@ -53,6 +52,7 @@ def buscar_respuesta(texto):
                 if patron.lower() in texto_limpio:
                     return item.get('respuesta', ''), 'AUTOMATICA'
     return None, None
+
 # Google Sheets
 try:
     from modules.google_sheets import GoogleSheets
@@ -62,7 +62,6 @@ except Exception as e:
     print(f"❌ Sheets no conectado: {e}")
     sheets = None
 
-# Palabras clave para Sheets
 PALABRAS_SHEETS = [
     "oc ", "resumen", "resumen oc", "resumen ordenes",
     "ordenes", "listar oc", "listar ordenes"
@@ -75,14 +74,9 @@ def es_comando_sheets(texto):
 def comando_sheets(texto):
     if not sheets:
         return "Google Sheets no está conectado"
-    
     t = texto.lower().strip()
-    
-    # Resumen
     if t in ['resumen', 'resumen oc', 'resumen ordenes', 'ordenes']:
         return sheets.resumen()
-    
-    # Buscar OC
     if t.startswith('oc '):
         numero = t.replace('oc ', '').strip()
         oc = sheets.buscar_oc(numero)
@@ -90,7 +84,6 @@ def comando_sheets(texto):
             return sheets.formatear_oc(oc)
         else:
             return f"❌ OC {numero} no encontrada"
-    
     return None
 
 # Google Drive comandos
@@ -107,9 +100,7 @@ def es_comando_drive(texto):
 def comando_drive(texto):
     if not drive:
         return "Google Drive no esta conectado"
-
     t = texto.lower().strip()
-
     if "mis archivos" in t or "listar archivos" in t:
         archivos = drive.mis_archivos(10)
         if not archivos:
@@ -119,7 +110,6 @@ def comando_drive(texto):
             icono = "[Carpeta]" if 'folder' in f['mimeType'] else "[Archivo]"
             resp += f"{i}. {icono} {f['name']}\n{f['webViewLink']}\n\n"
         return resp
-
     elif "mis carpetas" in t or "listar carpetas" in t:
         carpetas = drive.mis_carpetas()
         if not carpetas:
@@ -128,7 +118,6 @@ def comando_drive(texto):
         for i, c in enumerate(carpetas, 1):
             resp += f"{i}. {c['name']}\n{c['webViewLink']}\n\n"
         return resp
-
     elif t.startswith("busca ") or t.startswith("buscar "):
         termino = t.replace("busca ", "").replace("buscar ", "").strip()
         archivos = drive.buscar(termino)
@@ -139,7 +128,6 @@ def comando_drive(texto):
             icono = "[Carpeta]" if 'folder' in f['mimeType'] else "[Archivo]"
             resp += f"{i}. {icono} {f['name']}\n{f['webViewLink']}\n\n"
         return resp
-
     elif "estructura" in t or "arbol" in t:
         lineas = drive.estructura()
         if not lineas:
@@ -149,7 +137,6 @@ def comando_drive(texto):
         if len(lineas) > 25:
             resp += f"\n\n... y {len(lineas)-25} elementos mas"
         return resp
-
     elif t.startswith("abrir "):
         nombre = t.replace("abrir ", "").strip()
         nombre_carpeta, archivos = drive.contenido_carpeta(nombre)
@@ -157,24 +144,16 @@ def comando_drive(texto):
             return f"No encontre carpeta: {nombre}"
         if not archivos:
             return f"La carpeta '{nombre_carpeta}' esta vacia"
-        
-        # Formato compacto con emoji
         resp = f"*{nombre_carpeta}* ({len(archivos)} archivos)\n\n"
-        
         for i, f in enumerate(archivos[:15], 1):
             icono = "📁" if 'folder' in f['mimeType'] else "📄"
             link = f['webViewLink']
             resp += f"{i}. {icono} {f['name']} [🔗]({link})\n"
-        
         if len(archivos) > 15:
             resp += f"\n...y {len(archivos) - 15} mas"
-        
         return resp
-
     return None
 
-# IA Groq
-# IA Groq
 def generar_respuesta_ia(texto):
     try:
         completion = groq_client.chat.completions.create(
@@ -191,92 +170,41 @@ def generar_respuesta_ia(texto):
         print(f"Error IA: {e}")
         return "Disculpa, no puedo responder ahora.", 'ERROR'
 
-# Enviar a Telegram
-# Enviar a Telegram
 def enviar_a_telegram(chat_id, texto):
     try:
         if len(texto) > 4000:
             texto = texto[:4000] + "\n\n... (mensaje truncado)"
         url = f'{TELEGRAM_API}/sendMessage'
-        print(f"URL: {url}")
-        print(f"Chat ID: {chat_id}")
-        print(f"Texto: {texto}")
-        
         payload = {'chat_id': chat_id, 'text': texto, 'parse_mode': 'Markdown'}
-        print(f"Payload: {payload}")
-        
         r = requests.post(url, json=payload, timeout=15)
-        print(f"Status code: {r.status_code}")
-        print(f"Response: {r.text}")
-        
         return r.status_code == 200
     except Exception as e:
         print(f"Error enviando: {e}")
-        import traceback
-        traceback.print_exc()
         return False
 
-# Webhook
-# Webhook
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        print(f"\n{'='*50}")
-        print("WEBHOOK RECIBIDO")
-        print(f"{'='*50}")
-        
         data = request.get_json()
-        print(f"Data recibida: {data}")
-        
         if not data or 'message' not in data:
-            print("Sin mensaje en data")
             return jsonify({'ok': True}), 200
-
         msg     = data['message']
         chat_id = msg['chat']['id']
         texto   = msg.get('text', '')
-
-        print(f"Chat ID: {chat_id}")
-        print(f"Texto: {texto}")
-        print(f"{'='*50}")
-
         respuesta = None
-
-	# 1. Google Sheets ← NUEVO (PRIORIDAD 1)
-	 if es_comando_sheets(texto):
+        if es_comando_sheets(texto):
             respuesta = comando_sheets(texto)
-            if respuesta:
-                print("GOOGLE SHEETS")
-
-	# 2. Google Drive
-	if not respuesta and es_comando_drive(texto):
-    	respuesta = comando_drive(texto)
-    	if respuesta:
-        print("GOOGLE DRIVE")
-
-	# 3. Automatica
-	if not respuesta:
-    	respuesta, _ = buscar_respuesta(texto)
-    	if respuesta:
-        print("AUTOMATICA")
-
-	# 4. IA
-	if not respuesta:
-    	respuesta, _ = generar_respuesta_ia(texto)
-    	print("IA")
-        
+        if not respuesta and es_comando_drive(texto):
+            respuesta = comando_drive(texto)
+        if not respuesta:
+            respuesta, _ = buscar_respuesta(texto)
+        if not respuesta:
+            respuesta, _ = generar_respuesta_ia(texto)
         if respuesta:
             enviar_a_telegram(chat_id, respuesta)
-            print(f"Enviado correctamente")
-        else:
-            print("SIN RESPUESTA")
-
         return jsonify({'ok': True}), 200
-
     except Exception as e:
         print(f"ERROR EN WEBHOOK: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'ok': True}), 200
 
 @app.route('/health', methods=['GET'])
