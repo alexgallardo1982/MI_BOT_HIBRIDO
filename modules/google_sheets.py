@@ -72,7 +72,61 @@ class GoogleSheets:
         for reg in self.datos:
             if str(reg.get('oc', '')).strip().lower() == numero:
                 return reg
-        return None
+        
+    def buscar_proveedor_sin_factura(self, nombre_proveedor):
+        """Busca OCs de un proveedor que NO tienen factura"""
+        nombre_proveedor = nombre_proveedor.lower().strip()
+        resultados = []
+        
+        for reg in self.datos:
+            prov = str(reg.get('nombre', '')).lower().strip()
+            factura = str(reg.get('factura', '')).strip()
+            
+            # Busca el proveedor Y que no tenga factura
+            if nombre_proveedor in prov and not factura:
+                resultados.append(reg)
+        
+        return resultados
+    
+    def resumen_proveedor_sin_factura(self, nombre_proveedor):
+        """Resumen de OCs sin factura de un proveedor"""
+        ocs = self.buscar_proveedor_sin_factura(nombre_proveedor)
+        
+        if not ocs:
+            return f"❌ No hay OCs sin factura para: {nombre_proveedor}"
+        
+        total = len(ocs)
+        monto_total = 0
+        
+        try:
+            for oc in ocs:
+                monto_str = str(oc.get('monto', '0')).replace('$', '').replace(',', '')
+                monto_total += float(monto_str) if monto_str else 0
+        except:
+            pass
+        
+        texto = f"🔍 OCs SIN FACTURA - {nombre_proveedor.upper()}\n"
+        texto += "=" * 60 + "\n\n"
+        texto += f"📦 Total OCs sin factura: {total}\n"
+        texto += f"💰 Monto Total: ${monto_total:,.0f}\n\n"
+        texto += "DETALLE:\n"
+        texto += "-" * 60 + "\n\n"
+        
+        for i, oc in enumerate(ocs[:20], 1):
+            texto += f"{i}. OC {oc.get('oc', 'N/A')}\n"
+            texto += f"   📅 Fecha: {oc.get('fecha de creación', 'N/A')}\n"
+            texto += f"   📄 GD: {oc.get('gd', 'N/A')}\n"
+            texto += f"   ✉️ PE: {oc.get('pe', 'N/A')}\n"
+            texto += f"   🪪 RUT: {oc.get('rut', 'N/A')}\n"
+            texto += f"   💰 Monto: {oc.get('monto', 'N/A')}\n"
+            texto += "\n"
+        
+        if total > 20:
+            texto += f"... y {total - 20} más\n"
+        
+        texto += "\n" + "=" * 60
+        return texto
+	return None
     
     def resumen(self):
         """Resumen detallado de todas las órdenes"""

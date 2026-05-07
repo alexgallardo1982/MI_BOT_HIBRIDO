@@ -84,6 +84,12 @@ def comando_sheets(texto):
             return sheets.formatear_oc(oc)
         else:
             return f"❌ OC {numero} no encontrada"
+    # Buscar proveedor sin factura
+    if t.startswith('proveedor sin factura ') or t.startswith('proveedor '):
+        nombre = t.replace('proveedor sin factura ', '').replace('proveedor ', '').strip()
+        if nombre:
+            return sheets.resumen_proveedor_sin_factura(nombre)
+    
     return None
 
 # Google Drive comandos
