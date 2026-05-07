@@ -64,7 +64,7 @@ except Exception as e:
 
 PALABRAS_SHEETS = [
     "oc ", "resumen", "resumen oc", "resumen ordenes",
-    "ordenes", "listar oc", "listar ordenes"
+    "ordenes", "listar oc", "listar ordenes", "proveedor"
 ]
 
 def es_comando_sheets(texto):
