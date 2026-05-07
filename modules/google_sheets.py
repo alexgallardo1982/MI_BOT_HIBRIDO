@@ -1,8 +1,3 @@
-"""
-Google Sheets Module
-Lee la hoja: HIT ESTATUS ORDENES DE COMPRA
-"""
-
 import os
 import pickle
 import base64
@@ -20,7 +15,6 @@ class GoogleSheets:
         self.cargar_datos()
     
     def conectar(self):
-        """Conecta con Google Sheets"""
         try:
             SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
             creds = None
@@ -36,100 +30,38 @@ class GoogleSheets:
                 self.service = build('sheets', 'v4', credentials=creds)
                 print("✅ Google Sheets conectado")
         except Exception as e:
-            print(f"❌ Error Sheets: {e}")
+            print(f"❌ Error: {e}")
     
     def cargar_datos(self):
-        """Carga datos de la hoja"""
         try:
             if not self.service:
-                print("⚠️ Servicio Sheets no disponible")
                 return
-            
             result = self.service.spreadsheets().values().get(
                 spreadsheetId=SPREADSHEET_ID,
                 range=f"{SHEET_NAME}!A:H"
             ).execute()
-            
             valores = result.get('values', [])
             if len(valores) < 2:
-                print("⚠️ Sheets vacío")
                 return
-            
             encabezados = valores[0]
+            self.datos = []
             for fila in valores[1:]:
                 while len(fila) < len(encabezados):
                     fila.append("")
                 registro = {encabezados[i].lower(): fila[i] for i in range(len(encabezados))}
                 self.datos.append(registro)
-            
             print(f"✅ Sheets: {len(self.datos)} registros")
         except Exception as e:
             print(f"❌ Error cargando Sheets: {e}")
     
     def buscar_oc(self, numero):
-        """Busca una OC"""
         numero = str(numero).strip().lower()
         for reg in self.datos:
             if str(reg.get('oc', '')).strip().lower() == numero:
                 return reg
-        
-    def buscar_proveedor_sin_factura(self, nombre_proveedor):
-        """Busca OCs de un proveedor que NO tienen factura"""
-        nombre_proveedor = nombre_proveedor.lower().strip()
-        resultados = []
-        
-        for reg in self.datos:
-            prov = str(reg.get('nombre', '')).lower().strip()
-            factura = str(reg.get('factura', '')).strip()
-            
-            # Busca el proveedor Y que no tenga factura
-            if nombre_proveedor in prov and not factura:
-                resultados.append(reg)
-        
-        return resultados
-    
-    def resumen_proveedor_sin_factura(self, nombre_proveedor):
-        """Resumen de OCs sin factura de un proveedor"""
-        ocs = self.buscar_proveedor_sin_factura(nombre_proveedor)
-        
-        if not ocs:
-            return f"❌ No hay OCs sin factura para: {nombre_proveedor}"
-        
-        total = len(ocs)
-        monto_total = 0
-        
-        try:
-            for oc in ocs:
-                monto_str = str(oc.get('monto', '0')).replace('$', '').replace(',', '')
-                monto_total += float(monto_str) if monto_str else 0
-        except:
-            pass
-        
-        texto = f"🔍 OCs SIN FACTURA - {nombre_proveedor.upper()}\n"
-        texto += "=" * 60 + "\n\n"
-        texto += f"📦 Total OCs sin factura: {total}\n"
-        texto += f"💰 Monto Total: ${monto_total:,.0f}\n\n"
-        texto += "DETALLE:\n"
-        texto += "-" * 60 + "\n\n"
-        
-        for i, oc in enumerate(ocs[:20], 1):
-            texto += f"{i}. OC {oc.get('oc', 'N/A')}\n"
-            texto += f"   📅 Fecha: {oc.get('fecha de creación', 'N/A')}\n"
-            texto += f"   📄 GD: {oc.get('gd', 'N/A')}\n"
-            texto += f"   ✉️ PE: {oc.get('pe', 'N/A')}\n"
-            texto += f"   🪪 RUT: {oc.get('rut', 'N/A')}\n"
-            texto += f"   💰 Monto: {oc.get('monto', 'N/A')}\n"
-            texto += "\n"
-        
-        if total > 20:
-            texto += f"... y {total - 20} más\n"
-        
-        texto += "\n" + "=" * 60
-        return texto
-	return None
+        return None
     
     def resumen(self):
-        """Resumen detallado de todas las órdenes"""
         if not self.datos:
             return "❌ No hay datos en Sheets"
         
@@ -165,27 +97,69 @@ class GoogleSheets:
             texto += f"... y {total - 10} más\n"
         
         texto += "\n" + "=" * 50
-        return texto	
-	    
+        return texto
+    
     def formatear_oc(self, reg):
-        """Formatea una OC para mostrar"""
-        texto = "📋 ORDEN DE COMPRA\n" + "="*30 + "\n\n"
-        
+        texto = "📋 ORDEN DE COMPRA\n" + "=" * 50 + "\n\n"
         campos = {
-            'fecha': '📅',
+            'fecha de creación': '📅',
             'oc': '📦',
             'factura': '🧾',
             'gd': '📄',
             'pe': '✉️',
             'rut': '🪪',
-            'nombre prooveedor': '🏢',
+            'nombre': '🏢',
             'monto': '💰'
         }
-        
         for campo, emoji in campos.items():
-            valor = reg.get(campo, '') or reg.get(campo.lower(), '')
+            valor = reg.get(campo, '')
             if valor:
-                label = campo.replace('nombre prooveedor', 'Proveedor').title()
+                label = campo.replace('fecha de creación', 'Fecha').title()
                 texto += f"{emoji} {label}: {valor}\n"
+        return texto
+    
+    def buscar_proveedor_sin_factura(self, nombre_proveedor):
+        nombre_proveedor = nombre_proveedor.lower().strip()
+        resultados = []
+        for reg in self.datos:
+            prov = str(reg.get('nombre', '')).lower().strip()
+            factura = str(reg.get('factura', '')).strip()
+            if nombre_proveedor in prov and not factura:
+                resultados.append(reg)
+        return resultados
+    
+    def resumen_proveedor_sin_factura(self, nombre_proveedor):
+        ocs = self.buscar_proveedor_sin_factura(nombre_proveedor)
+        if not ocs:
+            return f"❌ No hay OCs sin factura para: {nombre_proveedor}"
         
+        total = len(ocs)
+        monto_total = 0
+        try:
+            for oc in ocs:
+                monto_str = str(oc.get('monto', '0')).replace('$', '').replace(',', '')
+                monto_total += float(monto_str) if monto_str else 0
+        except:
+            pass
+        
+        texto = f"🔍 OCS SIN FACTURA - {nombre_proveedor.upper()}\n"
+        texto += "=" * 60 + "\n\n"
+        texto += f"📦 Total OCs sin factura: {total}\n"
+        texto += f"💰 Monto Total: ${monto_total:,.0f}\n\n"
+        texto += "DETALLE:\n"
+        texto += "-" * 60 + "\n\n"
+        
+        for i, oc in enumerate(ocs[:20], 1):
+            texto += f"{i}. OC {oc.get('oc', 'N/A')}\n"
+            texto += f"   📅 Fecha: {oc.get('fecha de creación', 'N/A')}\n"
+            texto += f"   📄 GD: {oc.get('gd', 'N/A')}\n"
+            texto += f"   ✉️ PE: {oc.get('pe', 'N/A')}\n"
+            texto += f"   🪪 RUT: {oc.get('rut', 'N/A')}\n"
+            texto += f"   💰 Monto: {oc.get('monto', 'N/A')}\n"
+            texto += "\n"
+        
+        if total > 20:
+            texto += f"... y {total - 20} más\n"
+        
+        texto += "\n" + "=" * 60
         return texto
