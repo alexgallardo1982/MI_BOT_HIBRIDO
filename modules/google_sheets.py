@@ -75,34 +75,43 @@ class GoogleSheets:
         return None
     
     def resumen(self):
-        """Resumen de todas las OCs"""
-        if not self.datos:
-            return "❌ No hay datos en Sheets"
-        
-        total = len(self.datos)
-        monto_total = 0
-        
-        try:
-            for reg in self.datos:
-                monto_str = str(reg.get('monto', '0')).replace('$', '').replace(',', '')
-                monto_total += float(monto_str) if monto_str else 0
-        except:
-            pass
-        
-        texto = f"📊 RESUMEN OC\n{'='*30}\n"
-        texto += f"📦 Total: {total}\n"
-        texto += f"💰 Monto: ${monto_total:,.0f}\n\n"
-        
-        for i, reg in enumerate(self.datos[:5], 1):
-            oc = reg.get('oc', 'N/A')
-            proveedor = reg.get('nombre prooveedor', 'N/A')
-            monto = reg.get('monto', 'N/A')
-            texto += f"{i}. OC {oc}\n   {proveedor}\n   {monto}\n\n"
-        
-        if total > 5:
-            texto += f"... +{total-5} más"
-        
-        return texto
+    """Resumen detallado de todas las órdenes"""
+    if not self.datos:
+        return "❌ No hay datos en Sheets"
+    
+    total = len(self.datos)
+    monto_total = 0
+    
+    try:
+        for reg in self.datos:
+            monto_str = str(reg.get('monto', '0')).replace('$', '').replace(',', '')
+            monto_total += float(monto_str) if monto_str else 0
+    except:
+        pass
+    
+    texto = "📊 RESUMEN ÓRDENES DE COMPRA\n"
+    texto += "=" * 50 + "\n\n"
+    texto += f"📦 Total OCs: {total}\n"
+    texto += f"💰 Monto Total: ${monto_total:,.0f}\n\n"
+    texto += "DETALLE (Primeras 10):\n"
+    texto += "-" * 50 + "\n\n"
+    
+    for i, reg in enumerate(self.datos[:10], 1):
+        texto += f"{i}. OC {reg.get('oc', 'N/A')}\n"
+        texto += f"   📅 Fecha: {reg.get('fecha de creación', 'N/A')}\n"
+        texto += f"   🧾 Factura: {reg.get('factura', 'N/A')}\n"
+        texto += f"   📄 GD: {reg.get('gd', 'N/A')}\n"
+        texto += f"   ✉️ PE: {reg.get('pe', 'N/A')}\n"
+        texto += f"   🪪 RUT: {reg.get('rut', 'N/A')}\n"
+        texto += f"   🏢 Proveedor: {reg.get('nombre', 'N/A')}\n"
+        texto += f"   💰 Monto: {reg.get('monto', 'N/A')}\n"
+        texto += "\n"
+    
+    if total > 10:
+        texto += f"... y {total - 10} más\n"
+    
+    texto += "\n" + "=" * 50
+    return texto
     
     def formatear_oc(self, reg):
         """Formatea una OC para mostrar"""
